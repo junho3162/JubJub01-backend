@@ -1,0 +1,24 @@
+package org.example.jubjub.global.common; // 패키지 경로 수정됨!
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@Getter
+@AllArgsConstructor
+public class ApiResponse<T> {
+    private boolean success;
+    private String message;
+    private T data;
+
+    public static <T> ApiResponse<T> success(T data) {
+        return new ApiResponse<>(true, "요청에 성공하였습니다.", data);
+    }
+
+    public static <T> ApiResponse<T> success() {
+        return new ApiResponse<>(true, "요청에 성공하였습니다.", null);
+    }
+
+    public static <T> ApiResponse<T> error(String message) {
+        return new ApiResponse<>(false, message, null);
+    }
+}

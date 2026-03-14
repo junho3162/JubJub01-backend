@@ -1,5 +1,6 @@
 package org.example.jubjub.domain.auth.jwt;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -37,5 +38,30 @@ public class JwtTokenProvider {
                 .expiration(validity) // 만료 시간
                 .signWith(key) // 우리 서버만의 비밀키로 서명(도장 쾅!)
                 .compact(); // 토큰 문자열로 압축!
+    }
+
+    // 2. 토큰이 진짜인지(위조/만료 여부) 감식하는 메서드 🔍
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
+            return true;
+        } catch (Exception e) {
+            // 만료되었거나 위조된 토큰이면 false 반환
+            return false;
+        }
+    }
+
+    // 3. 토큰에서 손님의 PK 번호(memberId) 꺼내기 🔍
+    public Long getMemberId(String token) {
+        Claims claims = Jwts.parser().verifyWith(key).build()
+                .parseSignedClaims(token).getPayload();
+        return claims.get("memberId", Long.class);
+    }
+
+    // 4. 토큰에서 손님의 권한(role) 꺼내기 🔍
+    public String getRole(String token) {
+        Claims claims = Jwts.parser().verifyWith(key).build()
+                .parseSignedClaims(token).getPayload();
+        return claims.get("role", String.class);
     }
 }

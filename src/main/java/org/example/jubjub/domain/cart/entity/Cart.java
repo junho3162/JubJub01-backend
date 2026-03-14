@@ -33,4 +33,14 @@ public class Cart extends BaseTimeEntity {
 
     @Builder.Default
     private Integer quantity = 1; // 수량
+
+    // === 아래 비즈니스 로직 메서드를 추가했습니다 === //
+
+    /**
+     * 장바구니 수량 업데이트
+     * 기존 수량에 더하거나 새로운 수량으로 변경할 때 사용합니다.
+     */
+    public void updateQuantity(Integer newQuantity) {
+        this.quantity = newQuantity;
+    }
 }

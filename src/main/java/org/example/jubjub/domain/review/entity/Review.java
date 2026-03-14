@@ -1,7 +1,8 @@
-package org.example.jubjub.domain.order.entity;
+package org.example.jubjub.domain.review.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.jubjub.domain.order.entity.Order;
 import org.example.jubjub.domain.store.entity.Store;
 import org.example.jubjub.domain.user.entity.MemberProfile;
 import org.example.jubjub.global.common.BaseTimeEntity;
@@ -27,9 +28,10 @@ public class Review extends BaseTimeEntity {
     @JoinColumn(name = "store_id", nullable = false)
     private Store store;
 
+    // 한 주문당 리뷰는 1개만! (unique = true 추가)
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", nullable = false)
-    private Order order; // 어떤 주문에 대한 리뷰인지
+    @JoinColumn(name = "order_id", nullable = false, unique = true)
+    private Order order;
 
     @Column(nullable = false)
     private Integer rating; // 별점 (1~5)

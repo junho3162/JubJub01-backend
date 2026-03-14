@@ -5,6 +5,7 @@ import org.example.jubjub.domain.cart.entity.Cart;
 import org.example.jubjub.domain.cart.repository.CartRepository;
 import org.example.jubjub.domain.order.dto.OrderCreateRequestDto;
 import org.example.jubjub.domain.order.dto.OrderResponseDto;
+import org.example.jubjub.domain.order.dto.OrderStatusUpdateRequestDto;
 import org.example.jubjub.domain.order.entity.Order;
 import org.example.jubjub.domain.order.entity.OrderItem;
 import org.example.jubjub.domain.order.repository.OrderItemRepository;
@@ -91,4 +92,40 @@ public class OrderService {
         // 8. 사장님과 고객에게 보여줄 예쁜 응답 반환
         return new OrderResponseDto(savedOrder);
     }
+
+    public OrderResponseDto updateOrderStatus(Long orderId, OrderStatusUpdateRequestDto request) {
+        // 1. 주문 번호로 주문서를 찾습니다.
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다."));
+
+        // 2. 사장님이 보낸 문자열(String) 상태를 Enum 타입으로 변환합니다.
+        Order.OrderStatus newStatus;
+        try {
+            newStatus = Order.OrderStatus.valueOf(request.getStatus().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("유효하지 않은 주문 상태입니다.");
+        }
+
+        // 3. 주문 상태 업데이트! (JPA의 더티 체킹 덕분에 save()를 안 해도 DB에 자동 반영됩니다)
+        order.updateStatus(newStatus);
+
+        // 4. 변경된 결과를 반환
+        return new OrderResponseDto(order);
+    }
+
+    @Transactional(readOnly = true) // 데이터 변경 없이 읽기만 하므로 속도가 빠릅니다!
+    public List<OrderResponseDto> getMyOrders(Long profileId) {
+        // 1. 혹시 모를 유령 사용자 방지
+        memberProfileRepository.findById(profileId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        // 2. 저장소에서 이 사용자의 주문 내역을 최신순으로 다 가져오기
+        List<Order> orders = orderRepository.findAllByMemberProfileIdOrderByCreatedAtDesc(profileId);
+
+        // 3. 예쁜 DTO 형태로 변환해서 리스트로 반환
+        return orders.stream()
+                .map(OrderResponseDto::new)
+                .collect(Collectors.toList());
+    }
+
 }

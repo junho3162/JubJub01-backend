@@ -47,4 +47,9 @@ public class Order extends BaseTimeEntity {
     public enum OrderStatus {
         PENDING, ACCEPTED, PREPARING, READY, COMPLETED, CANCELLED
     }
+
+    // === 비즈니스 로직 메서드 === //
+    public void updateStatus(OrderStatus newStatus) {
+        this.status = newStatus;
+    }
 }

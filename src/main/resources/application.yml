@@ -18,8 +18,14 @@ spring:
     init:
       mode: always # 항상 SQL 초기화 실행
 
+
 # P6Spy ?? ??? ?? ?? (?? ??? ??????)
 decorator:
   datasource:
     p6spy:
       enable-logging: true
+
+jwt:
+  # secret과 expiration-time은 스페이스바 2칸 들여쓰기!
+  secret: JubJubDeliveryAppSecretKeyForJwtTokenGeneration2024
+  expiration-time: 86400000

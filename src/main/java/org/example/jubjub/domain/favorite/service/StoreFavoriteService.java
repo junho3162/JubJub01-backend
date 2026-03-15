@@ -25,10 +25,14 @@ public class StoreFavoriteService {
     private final StoreRepository storeRepository;
 
     // 찜하기 등록/취소 토글 (Toggle)
-    public String toggleFavorite(Long profileId, Long storeId) {
-        // 1. 회원 및 매장 검증
-        MemberProfile profile = memberProfileRepository.findById(profileId)
+    public String toggleFavorite(Long memberId, Long storeId) {
+        // 🚨 1. findById -> findByMemberId 로 수정 완료!
+        MemberProfile profile = memberProfileRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        // 💡 진짜 프로필 ID 꺼내기
+        Long profileId = profile.getId();
+
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new IllegalArgumentException("매장을 찾을 수 없습니다."));
 
@@ -52,13 +56,13 @@ public class StoreFavoriteService {
 
     // 내 찜 목록 조회
     @Transactional(readOnly = true)
-    public List<StoreFavoriteResponseDto> getMyFavorites(Long profileId) {
-        // 유효한 사용자인지 먼저 확인
-        memberProfileRepository.findById(profileId)
+    public List<StoreFavoriteResponseDto> getMyFavorites(Long memberId) {
+        // 🚨 2. 찾은 결과를 MemberProfile profile 변수에 예쁘게 담기 완료!
+        MemberProfile profile = memberProfileRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
-        // 내 찜 목록을 가져와서 DTO로 변환 후 반환
-        return favoriteRepository.findAllByMemberProfileIdOrderByCreatedAtDesc(profileId)
+        // 🚨 3. profile.getId -> profile.getId() 로 괄호 추가 완료!
+        return favoriteRepository.findAllByMemberProfileIdOrderByCreatedAtDesc(profile.getId())
                 .stream()
                 .map(StoreFavoriteResponseDto::new)
                 .collect(Collectors.toList());

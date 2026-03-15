@@ -38,6 +38,10 @@ public class SecurityConfig {
                         // 스웨거 화면과 회원가입/인증 API는 누구든 들어올 수 있게 허락합니다.
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/api/v1/auth/**").permitAll()
+
+                        // 👇 이 한 줄을 추가해 주세요! (에러 발생 시 진짜 에러 메시지를 볼 수 있게 해줍니다)
+                        .requestMatchers("/error").permitAll()
+
                         // 🚨 나머지 API(장바구니, 주문 등)는 일단 지금은 다 열어둡니다! (나중에 JWT 필터 만들 때 닫을 거예요)
                         // 👇 이 부분이 반드시 authenticated() 여야 합니다! (permitAll 이면 안 돼요!)
                         .anyRequest().authenticated()

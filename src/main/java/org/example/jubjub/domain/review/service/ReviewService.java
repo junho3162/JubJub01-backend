@@ -7,6 +7,8 @@ import org.example.jubjub.domain.review.dto.ReviewCreateRequestDto;
 import org.example.jubjub.domain.review.dto.ReviewResponseDto;
 import org.example.jubjub.domain.review.entity.Review;
 import org.example.jubjub.domain.review.repository.ReviewRepository;
+import org.example.jubjub.domain.user.entity.MemberProfile;
+import org.example.jubjub.domain.user.repository.MemberProfileRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,14 +22,19 @@ public class ReviewService {
 
     private final ReviewRepository reviewRepository;
     private final OrderRepository orderRepository;
+    private final MemberProfileRepository memberProfileRepository; // 💡 토큰으로 회원 찾기 위해 추가!
 
-    public ReviewResponseDto createReview(Long profileId, ReviewCreateRequestDto request) {
+    public ReviewResponseDto createReview(Long memberId, ReviewCreateRequestDto request) {
+        // 🚨 0. 토큰에서 나온 memberId로 내 프로필 안전하게 찾기!
+        MemberProfile profile = memberProfileRepository.findByMemberId(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
         // 주문 정보 가져오기
         Order order = orderRepository.findById(request.getOrderId())
                 .orElseThrow(() -> new IllegalArgumentException("주문 내역을 찾을 수 없습니다."));
 
         // 🚨 원칙 1: 내 주문이 맞는가?
-        if (!order.getMemberProfile().getId().equals(profileId)) {
+        if (!order.getMemberProfile().getId().equals(profile.getId())) {
             throw new IllegalArgumentException("본인이 주문한 내역에만 리뷰를 작성할 수 있습니다.");
         }
 

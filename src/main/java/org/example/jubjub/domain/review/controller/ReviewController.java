@@ -7,6 +7,7 @@ import org.example.jubjub.domain.review.dto.ReviewCreateRequestDto;
 import org.example.jubjub.domain.review.dto.ReviewResponseDto;
 import org.example.jubjub.domain.review.service.ReviewService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,12 +21,12 @@ public class ReviewController {
     private final ReviewService reviewService;
 
     @Operation(summary = "리뷰 작성", description = "완료된 주문에 대해 리뷰를 작성합니다.")
-    @PostMapping("/{profileId}")
+    @PostMapping
     public ResponseEntity<ReviewResponseDto> createReview(
-            @PathVariable Long profileId,
+            @AuthenticationPrincipal Long memberId,
             @RequestBody ReviewCreateRequestDto request) {
 
-        ReviewResponseDto response = reviewService.createReview(profileId, request);
+        ReviewResponseDto response = reviewService.createReview(memberId, request);
         return ResponseEntity.ok(response);
     }
 

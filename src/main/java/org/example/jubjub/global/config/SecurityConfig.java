@@ -23,6 +23,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                // 🚨 1. [핵심] CSRF 비활성화! (이게 없어서 POST 회원가입 시 403 에러가 났던 것입니다)
+                .csrf(AbstractHttpConfigurer::disable)
                 // 1. 방금 보신 그 기본 로그인 화면 끄기!
                 .formLogin(AbstractHttpConfigurer::disable)
                 // 2. HTTP Basic 인증 끄기

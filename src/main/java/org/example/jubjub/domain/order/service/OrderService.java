@@ -34,14 +34,18 @@ public class OrderService {
     private final MemberProfileRepository memberProfileRepository;
     private final StoreRepository storeRepository;
 
-    public OrderResponseDto createOrder(Long profileId, OrderCreateRequestDto request) {
-        // 1. 사용자 및 매장 정보 확인
-        MemberProfile profile = memberProfileRepository.findById(profileId)
+    public OrderResponseDto createOrder(Long memberId, OrderCreateRequestDto request) {
+        // 🚨 1. findById -> findByMemberId 로 변경!
+        MemberProfile profile = memberProfileRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        // 💡 진짜 프로필 번호 꺼내기
+        Long profileId = profile.getId();
+
         Store store = storeRepository.findById(request.getStoreId())
                 .orElseThrow(() -> new IllegalArgumentException("매장을 찾을 수 없습니다."));
 
-        // 2. 해당 매장에 담은 장바구니 항목만 쏙 골라내기
+        // 🚨 2. memberId가 아니라 방금 꺼낸 profileId 로 장바구니를 조회해야 합니다!
         List<Cart> storeCartItems = cartRepository.findAllByMemberProfileId(profileId).stream()
                 .filter(cart -> cart.getStore().getId().equals(request.getStoreId()))
                 .collect(Collectors.toList());
@@ -94,11 +98,10 @@ public class OrderService {
     }
 
     public OrderResponseDto updateOrderStatus(Long orderId, OrderStatusUpdateRequestDto request) {
-        // 1. 주문 번호로 주문서를 찾습니다.
+        // (기존 코드 그대로 유지)
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다."));
 
-        // 2. 사장님이 보낸 문자열(String) 상태를 Enum 타입으로 변환합니다.
         Order.OrderStatus newStatus;
         try {
             newStatus = Order.OrderStatus.valueOf(request.getStatus().toUpperCase());
@@ -106,26 +109,21 @@ public class OrderService {
             throw new IllegalArgumentException("유효하지 않은 주문 상태입니다.");
         }
 
-        // 3. 주문 상태 업데이트! (JPA의 더티 체킹 덕분에 save()를 안 해도 DB에 자동 반영됩니다)
         order.updateStatus(newStatus);
-
-        // 4. 변경된 결과를 반환
         return new OrderResponseDto(order);
     }
 
-    @Transactional(readOnly = true) // 데이터 변경 없이 읽기만 하므로 속도가 빠릅니다!
-    public List<OrderResponseDto> getMyOrders(Long profileId) {
-        // 1. 혹시 모를 유령 사용자 방지
-        memberProfileRepository.findById(profileId)
+    @Transactional(readOnly = true)
+    public List<OrderResponseDto> getMyOrders(Long memberId) { // 🚨 3. 파라미터 profileId -> memberId로 변경
+        // 토큰에서 나온 memberId로 프로필을 먼저 찾습니다.
+        MemberProfile profile = memberProfileRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
-        // 2. 저장소에서 이 사용자의 주문 내역을 최신순으로 다 가져오기
-        List<Order> orders = orderRepository.findAllByMemberProfileIdOrderByCreatedAtDesc(profileId);
+        // 💡 찾아온 프로필의 getId() 를 사용해서 주문 목록 조회!
+        List<Order> orders = orderRepository.findAllByMemberProfileIdOrderByCreatedAtDesc(profile.getId());
 
-        // 3. 예쁜 DTO 형태로 변환해서 리스트로 반환
         return orders.stream()
                 .map(OrderResponseDto::new)
                 .collect(Collectors.toList());
     }
-
 }

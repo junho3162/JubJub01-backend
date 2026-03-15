@@ -64,4 +64,28 @@ public class CartService {
                 .map(CartResponseDto::new)
                 .collect(Collectors.toList());
     }
+
+    // 🗑️ 1. 장바구니 특정 메뉴 하나 빼기
+    public void deleteCartItem(Long memberId, Long cartId) {
+        MemberProfile profile = memberProfileRepository.findByMemberId(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        Cart cart = cartRepository.findById(cartId)
+                .orElseThrow(() -> new IllegalArgumentException("장바구니 아이템을 찾을 수 없습니다."));
+
+        // [보안] 내 장바구니가 맞는지 확인! (남의 햄버거를 빼면 안 되니까요)
+        if (!cart.getMemberProfile().getId().equals(profile.getId())) {
+            throw new IllegalArgumentException("본인의 장바구니만 삭제할 수 있습니다.");
+        }
+
+        cartRepository.delete(cart);
+    }
+
+    public void clearCart(Long memberId) {
+        MemberProfile profile = memberProfileRepository.findByMemberId(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        cartRepository.deleteAllByMemberProfileId(profile.getId());
+    }
+
 }

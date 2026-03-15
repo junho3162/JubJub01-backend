@@ -35,4 +35,21 @@ public class CartController {
                                                            @AuthenticationPrincipal Long memberId) { // 👈 토큰에서 내 번호를 꺼내옵니다!
         return ResponseEntity.ok(cartService.getMyCart(memberId /*, profileId*/));
     }
+
+    @Operation(summary = "장바구니 특정 메뉴 삭제", description = "장바구니에서 특정 메뉴 하나를 뺍니다.")
+    @DeleteMapping("/{cartId}")
+    public ResponseEntity<String> deleteCartItem(
+            @AuthenticationPrincipal Long memberId,
+            @PathVariable Long cartId) {
+        cartService.deleteCartItem(memberId, cartId);
+        return ResponseEntity.ok("메뉴가 장바구니에서 삭제되었습니다. 🗑️");
+    }
+
+    @Operation(summary = "장바구니 전체 비우기", description = "장바구니에 담긴 모든 메뉴를 싹 비웁니다.")
+    @DeleteMapping
+    public ResponseEntity<String> clearCart(
+            @AuthenticationPrincipal Long memberId) {
+        cartService.clearCart(memberId);
+        return ResponseEntity.ok("장바구니가 싹 비워졌습니다! ✨");
+    }
 }
